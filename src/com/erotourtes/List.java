@@ -16,42 +16,7 @@ public class List<T> implements Iterable<T> {
         length = 0;
     }
 
-    /*public void add(T value) {
-        var newItem = new ListElement<T>();
-        newItem.value = value;
-
-
-        if(startingElement.linkToNext == null)
-            startingElement.linkToNext = newItem;
-        else
-            lastElement.linkToNext = newItem;
-
-        lastElement = newItem;
-
-        newItem.index = length++;
-    }*/
-
-    /*public boolean insertToStart(T value) {
-        var newItem = new ListElement<T>();
-        newItem.value = value;
-        newItem.index = 0;
-
-        var iterator = listIterator();
-
-        while(iterator.hasNext()) {
-            iterator.next();
-            iterator.currentElement.index++;
-        }
-
-        if(startingElement.linkToNext != null)
-            newItem.linkToNext = startingElement.linkToNext;
-
-        startingElement.linkToNext = newItem;
-
-        length++;
-        return true;
-    }*/
-
+    //add methods
     public boolean addByIndex(int index, T value) {
         if(index > length)
             return false;
@@ -59,89 +24,70 @@ public class List<T> implements Iterable<T> {
         var newItem = new ListElement<T>(index, value);
         var iterator = listIterator();
 
-        while (iterator.currentElement.index < index - 1) {
-            iterator.next();
-        }
+        while (iterator.currentElement.index < index - 1)
+            iterator.saveNext();
 
         if(iterator.currentElement.linkToNext != null)
             newItem.linkToNext = iterator.currentElement.linkToNext;
         iterator.currentElement.linkToNext = newItem;
 
+        iterator.saveNext();
+        length++;
+
         while(iterator.hasNext()) {
-            iterator.next();
+            iterator.saveNext();
             iterator.currentElement.index++;
         }
-
-        length++;
 
         return true;
     }
 
-    /*public boolean addByIndex(int index, T value, boolean t) {
-        if (index > length)
+    public boolean unShift(T value) {
+        return addByIndex(0, value);
+    }
+
+    public boolean push(T value) {
+        return addByIndex(length, value);
+    }
+
+    //remove methods
+    public boolean removeByIndex(int index) {
+        if(index > length)
             return false;
 
-        if(index == 0)
-            return insertToStart(value);
-
-        var newItem = new ListElement<T>();
-        newItem.value = value;
-        newItem.index = index;
-
         var iterator = listIterator();
-        boolean isAdded = false;
 
-        while (iterator.hasNext()) {
-            var el = iterator.currentElement;
-            if(isAdded) {
-                el.index++;
-            } else if(el.index == index - 1) {
-                if(el.linkToNext != null)
-                    newItem.linkToNext = el.linkToNext;
-                el.linkToNext = newItem;
-                isAdded = true;
-            }
+        while (iterator.currentElement.index < index - 1)
+            iterator.saveNext();
+
+        iterator.currentElement.linkToNext = iterator.currentElement.linkToNext.linkToNext;
+        length--;
+
+        while(iterator.hasNext()) {
+            iterator.saveNext();
+            iterator.currentElement.index--;
         }
 
-        newItem.index = length++;
         return true;
-    }*/
+    }
+
+    public boolean shift() {
+        return removeByIndex(0);
+    }
+
+    public boolean pop() {
+        return removeByIndex(length);
+    }
 
     public void info() {
         var iterator = listIterator();
 
         while(iterator.hasNext()) {
             iterator.next();
-            var el = iterator.currentEl();
+            var el = iterator.currentElement;
             System.out.println("index = " + el.index + " value = " + el.value);
         }
-    }
-
-    public T remove(int index) {
-        var currentElement = startingElement;
-        T deletedElementsValue = startingElement.value;
-        boolean isFinded = false;
-
-        for (var i = 0; i < length; i++) {
-            if(isFinded) {
-                currentElement.index--;
-            } else if (currentElement.linkToNext.index == index) {
-                deletedElementsValue = currentElement.linkToNext.value;
-
-                var deletedElement = currentElement.linkToNext;
-                if (deletedElement.linkToNext != null)
-                    currentElement.linkToNext = deletedElement.linkToNext;
-                else
-                    currentElement.linkToNext = null;
-
-                isFinded = true;
-            }
-            currentElement = currentElement.linkToNext;
-        }
-        if(isFinded)
-            length--;
-
-        return deletedElementsValue;
+        System.out.println();
     }
 
     @Override
@@ -181,10 +127,6 @@ public class List<T> implements Iterable<T> {
             currentElement = startingElement;
         }
 
-        public ListElement<T> currentEl() {
-            return currentElement;
-        }
-
         @Override
         public boolean hasNext() {
             return index < list.length;
@@ -192,9 +134,14 @@ public class List<T> implements Iterable<T> {
 
         @Override
         public T next() {
-            index++;
             currentElement = currentElement.linkToNext;
+            index++;
             return currentElement.value;
+        }
+
+        public void saveNext() {
+            currentElement = currentElement.linkToNext;
+            index++;
         }
     }
 
